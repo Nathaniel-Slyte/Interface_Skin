@@ -46,13 +46,15 @@ class MuCa {
 
     // TOUCH
     bool updated();
-    int getNumberOfTouches();
-    TouchPoint getTouch(int i);
+    //int getNumberOfTouches();
+    //TouchPoint getTouch(int i);
 
     //RAW
     void pollRaw();
     bool useRaw = false;
     short grid[NUM_ROWS * NUM_COLUMNS];
+
+    // manual callibration
     void calibrate();
     void setGain(int val);
 
@@ -61,11 +63,11 @@ class MuCa {
     bool isInit = false;
 
     // TOUCH
-    TouchPoint touchpoints[5];
-    byte touchRegisters[TOUCH_REGISTERS];
-    void getTouchData();
-    void setTouchPoints();
-    byte numTouches = 0;
+    //TouchPoint touchpoints[5];
+    //byte touchRegisters[TOUCH_REGISTERS];
+    //void getTouchData();
+    //void setTouchPoints();
+    //byte numTouches = 0;
 
     //RAW
     void getRawData();
@@ -91,12 +93,12 @@ void MuCa::init(bool raw = false) {
     Wire.write(byte(0x00));
     Wire.write(byte(MODE_TEST));
     Wire.endTransmission(I2C_ADDRESS);
-  } else {
-    Wire.beginTransmission(I2C_ADDRESS);
-    Wire.write(byte(0x00));
-    Wire.write(MODE_NORMAL);
-    Wire.endTransmission(I2C_ADDRESS);
-  }
+   }// else {
+  //   Wire.beginTransmission(I2C_ADDRESS);
+  //   Wire.write(byte(0x00));
+  //   Wire.write(byte(MODE_NORMAL));
+  //   Wire.endTransmission(I2C_ADDRESS);
+  // }
   delay(100);
   Serial.println("MuCa initialized");
   delay(100);
@@ -107,65 +109,65 @@ void MuCa::init(bool raw = false) {
 //// ============================== TOUCH ==============================
 
 
-bool MuCa::updated() {
-  if (!isInit) return false;
-  poll();
-  if (useRaw) return true;
+ bool MuCa::updated() {
+   if (!isInit) return false;
+   poll();
+   if (useRaw) return true;
 
-  if (newTouch == true) {
-    newTouch = false;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-TouchPoint MuCa::getTouch(int i) {
-  return touchpoints[i];
-}
-
-bool MuCa::poll() {
-  if (useRaw) {
-    getRawData();
-  } else {
-    getTouchData();
-    setTouchPoints();
-  }
-  return true;
-}
-
-void MuCa::getTouchData() {
-  Wire.requestFrom(I2C_ADDRESS, TOUCH_REGISTERS);
-  int register_number = 0;
-  // get all register bytes when available
-  while (Wire.available())
-  {
-    touchRegisters[register_number++] = Wire.read();
-  }
-}
-
-void MuCa::setTouchPoints() {
-  numTouches = touchRegisters[STATUS] & 0xF;
-  unsigned int registerIndex = 0;
-  for (int i = 0; i < numTouches; i++) {
-    // 0 1 0 1 0 0 1 1 0
-    // HIGH          LOW
-    // var high = b >> 4; var low = b & 0x0F;
-
-    registerIndex = (i * 6) + 3;
-    touchpoints[i].flag    = touchRegisters[registerIndex] >> 6; // 0 = down, 1 = lift up, // 2 = contact // 3 = no event
-    // touchpoints[i].flag = touchRegisters[registerIndex] les deux premiers bits
-    touchpoints[i].x       = word(touchRegisters[registerIndex] & 0x0f, touchRegisters[registerIndex + 1]);
-    touchpoints[i].y       = word(touchRegisters[registerIndex + 2] & 0x0f, touchRegisters[registerIndex + 3]);
-    touchpoints[i].id      = touchRegisters[registerIndex + 2] >> 4;
-    touchpoints[i].weight  = touchRegisters[registerIndex + 4];
-    touchpoints[i].area    = touchRegisters[registerIndex + 5] >> 4;
-  }
-}
-
-int MuCa::getNumberOfTouches() {
-  return numTouches;
-}
+//   if (newTouch == true) {
+//     newTouch = false;
+//     return true;
+//   } else {
+//     return false;
+//   }
+ }
+//
+// TouchPoint MuCa::getTouch(int i) {
+//   return touchpoints[i];
+// }
+//
+ bool MuCa::poll() {
+   if (useRaw) {
+     getRawData();
+   }// else {
+//     getTouchData();
+//     setTouchPoints();
+//   }
+//   return true;
+ }
+//
+// void MuCa::getTouchData() {
+//   Wire.requestFrom(I2C_ADDRESS, TOUCH_REGISTERS);
+//   int register_number = 0;
+//   // get all register bytes when available
+//   while (Wire.available())
+//   {
+//     touchRegisters[register_number++] = Wire.read();
+//   }
+// }
+//
+// void MuCa::setTouchPoints() {
+//   numTouches = touchRegisters[STATUS] & 0xF;
+//   unsigned int registerIndex = 0;
+//   for (int i = 0; i < numTouches; i++) {
+//     // 0 1 0 1 0 0 1 1 0
+//     // HIGH          LOW
+//     // var high = b >> 4; var low = b & 0x0F;
+//
+//     registerIndex = (i * 6) + 3;
+//     touchpoints[i].flag    = touchRegisters[registerIndex] >> 6; // 0 = down, 1 = lift up, // 2 = contact // 3 = no event
+//     // touchpoints[i].flag = touchRegisters[registerIndex] les deux premiers bits
+//     touchpoints[i].x       = word(touchRegisters[registerIndex] & 0x0f, touchRegisters[registerIndex + 1]);
+//     touchpoints[i].y       = word(touchRegisters[registerIndex + 2] & 0x0f, touchRegisters[registerIndex + 3]);
+//     touchpoints[i].id      = touchRegisters[registerIndex + 2] >> 4;
+//     touchpoints[i].weight  = touchRegisters[registerIndex + 4];
+//     touchpoints[i].area    = touchRegisters[registerIndex + 5] >> 4;
+//   }
+// }
+//
+// int MuCa::getNumberOfTouches() {
+//   return numTouches;
+// }
 
 
 
@@ -263,7 +265,7 @@ void MuCa::getRawData() {
 }
 
 
-//// ============================== RAW ==============================
+//// ============================== CALIBRATION ==============================
 
 
 void MuCa::calibrate() {

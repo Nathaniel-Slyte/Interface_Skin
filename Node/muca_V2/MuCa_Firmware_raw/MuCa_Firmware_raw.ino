@@ -4,7 +4,7 @@
   #define SERIAL_BUFFER_SIZE 64
 #endif
 
-#include "MuCa_firmware.h"
+#include "MuCa_firmware_raw.h"
 
 MuCa muca;
 
@@ -13,7 +13,7 @@ void setup() {
 
   muca.init(); // useInterrupt ne fonctionne pas bien
   muca.useRaw = true;
- // muca.setGain(100);
+  // muca.setGain(100);
 }
 
 void loop() {
@@ -37,7 +37,7 @@ void GetRaw() {
  // delay(1);
 }
 
-
+/*
 void GetTouch() {
   if (muca.updated()) {
     for (int i = 0; i < muca.getNumberOfTouches(); i++) {
@@ -56,7 +56,7 @@ void GetTouch() {
     if ( muca.getNumberOfTouches() != 0) Serial.println("");
   }
 }
-
+*/
 
 int frameCount = 0;
 float fps = 0.0F;
