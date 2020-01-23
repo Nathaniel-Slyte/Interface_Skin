@@ -17,7 +17,6 @@ void setup() {
 }
 
 void loop() {
-  //GetTouch();
   GetRaw();
 }
 
@@ -36,27 +35,6 @@ void GetRaw() {
 
  // delay(1);
 }
-
-/*
-void GetTouch() {
-  if (muca.updated()) {
-    for (int i = 0; i < muca.getNumberOfTouches(); i++) {
-      Serial.print("Touch ");
-      Serial.print(i);
-      Serial.print("\tx:");
-      Serial.print(muca.getTouch(i).x);
-      Serial.print("\ty:");
-      Serial.print(muca.getTouch(i).y);
-      Serial.print("\tid:");
-      Serial.print(muca.getTouch(i).id);
-      Serial.print("\tweight:");
-      Serial.print(muca.getTouch(i).weight);
-      Serial.print(" |\t");
-    }
-    if ( muca.getNumberOfTouches() != 0) Serial.println("");
-  }
-}
-*/
 
 int frameCount = 0;
 float fps = 0.0F;
