@@ -24,9 +24,9 @@ void GetRaw() {
   if (muca.updated()) {
   // GetFPS();
 
-   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+   for (int i = 0; i < ROWS_USE * NUM_COLUMNS; i++) {
       if (muca.grid[i] > 0) Serial.print(muca.grid[i]);
-      if (i != NUM_ROWS * NUM_COLUMNS - 1)
+      if (i != ROWS_USE * NUM_COLUMNS - 1)
         Serial.print(",");
     }
    Serial.println();
