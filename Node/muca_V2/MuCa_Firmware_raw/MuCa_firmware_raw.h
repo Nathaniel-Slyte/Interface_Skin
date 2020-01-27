@@ -115,14 +115,12 @@ void MuCa::getRawData() {
 
     delayMicroseconds(50);
     //  delayMicroseconds(50); // Wait at least 100us
-    //delay(10);
-
 
 
     Wire.beginTransmission(I2C_ADDRESS);
     Wire.write(byte(16)); // The address of the first column is 0x10 (16 in decimal).
     Wire.endTransmission(false);
-    Wire.requestFrom(I2C_ADDRESS, 2 * NUM_COLUMNS, false); // TODO : falst was added IDK why
+    Wire.requestFrom(I2C_ADDRESS, 2 * NUM_COLUMNS, false); // TODO : false was added IDK why
     unsigned int g = 0;
     while (Wire.available()) {
       result[g++] = Wire.read();
