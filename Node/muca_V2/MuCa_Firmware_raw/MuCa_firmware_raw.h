@@ -34,12 +34,13 @@ class MuCa {
     short grid[ROWS_USE * NUM_COLUMNS];
 
     // manual callibration
-    void calibrate();
+    void calibrate(float variance);
     void setGain(int val);
 
 
   private:
     bool isInit = false;
+    bool calibrationDone = false;
 
     //RAW
     void getRawData();
@@ -95,8 +96,6 @@ bool MuCa::poll() {
 
 void MuCa::getRawData() {
 
-  int startTime = millis();
-
   // Start scan
   Wire.beginTransmission(I2C_ADDRESS);
   Wire.write(byte(0x00));
@@ -104,7 +103,6 @@ void MuCa::getRawData() {
   Wire.endTransmission();
 
 
-  ////////////////////////////// Serial.print("startread:");  int tt = millis();  Serial.print(tt);
   // Read Data
   for (unsigned int rowAddr = 0; rowAddr < ROWS_USE; rowAddr++) {
 
@@ -117,8 +115,7 @@ void MuCa::getRawData() {
     unsigned int st = Wire.endTransmission();
     if (st < 0) Serial.print("i2c write failed");
 
-    delayMicroseconds(50);
-    //  delayMicroseconds(50); // Wait at least 100us
+    delayMicroseconds(100); // Wait at least 100us
 
 
     Wire.beginTransmission(I2C_ADDRESS);
@@ -129,23 +126,11 @@ void MuCa::getRawData() {
     while (Wire.available()) {
       result[g++] = Wire.read();
     }
-    //
-    // for (unsigned int i = 0; i<sizeof(result); i++)
-    // {
-    //   Serial.print(" Result ");
-    //   Serial.print(i);
-    //   Serial.print(" : ");
-    //   Serial.print(result[i]);
-    // }
-    // Serial.println();
 
 
     for (unsigned int col = 0; col < NUM_COLUMNS; col++) {
       unsigned  int output = (result[2 * col] << 8) | (result[2 * col + 1]); // Get High and Low bytes for an intersection of row and column
-      // Serial.print(" output ");
-      // Serial.print(col);
-      // Serial.print(" : ");
-      // Serial.print(output);
+
       if (calibrationSteps == CALIBRATION_MAX) {
         grid[(rowAddr * NUM_COLUMNS) +  NUM_COLUMNS - col - 1] = CALIB_THRESHOLD + output - calibrateGrid[(rowAddr * NUM_COLUMNS) +  NUM_COLUMNS - col - 1];
       } else {
@@ -157,33 +142,29 @@ void MuCa::getRawData() {
 
 
   } // End foreachrow
-  ////////////////////////////// Serial.print("end:"); Serial.println(millis() - tt);
-
-  // Calibration
-  if (calibrationSteps != CALIBRATION_MAX) {
-    if (grid[0] < 5000) return;
-    if (calibrationSteps == 0) {
-      memcpy(calibrateGrid, grid, sizeof(grid));
-    } else {
-      for (int i = 0; i < (ROWS_USE * NUM_COLUMNS); i++) {
-        // calibrateGrid[i] = (calibrateGrid[i] & grid[i]) + ((calibrateGrid[i] ^ grid[i]) >> 1);
-        calibrateGrid[i] = (calibrateGrid[i] + grid[i]) / 2;
-      }
-    }
-    Serial.println("Calibrate");
-    calibrationSteps++;
-  }
 
 }
 
 
 //// ============================== CALIBRATION ==============================
 
-
-
-
-void MuCa::calibrate() {
+void MuCa::calibrate(float variance){
   calibrationSteps = 0;
+  while (calibrationSteps != CALIBRATION_MAX) {
+    getRawData();
+    if (grid[0] < 5000) return;
+    if (calibrationSteps == 0 && !calibrationDone) {
+      memcpy(calibrateGrid, grid, sizeof(grid));
+    }
+    else {
+      for (int i = 0; i < (ROWS_USE * NUM_COLUMNS); i++) {
+        calibrateGrid[i] = (calibrateGrid[i] + grid[i]) /2;//(variance * grid[i]);
+      }
+    }
+    //Serial.println("Calibrate");
+    calibrationSteps++;
+  }
+  calibrationDone = true;
 }
 
 void MuCa::setGain(int gain) {

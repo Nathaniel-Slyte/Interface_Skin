@@ -13,6 +13,8 @@ final int     SKIN_SKIP_ROWS     = 0;
 final int     SKIN_BUFFER_OFFSET = SKIN_SKIP_ROWS * SKIN_COLS;
 
 final float   PRESS_FACTOR       = .6; //0.5, sensibility
+final int     MIN_RANGE          = 0;
+final int     MAX_RANGE          = 600;
 
 final int     CELL_W             = 50;
 final int     CELL_H             = 50;
@@ -46,6 +48,10 @@ void readSkinBuffer( ) {
 
 double sigmoid( double x ) { return 1. / ( 1. + Math.exp( -x ) ); }
 
+double scaleBetween(double unscaledNum, int minAllowed, int maxAllowed, int min, int max) {
+  return (maxAllowed - minAllowed) * (unscaledNum - min) / (max - min) + minAllowed;
+}
+
 void drawSkinHeatMap( ) {
   noStroke( );
   background( GRADIENT[ 0 ] );
@@ -53,7 +59,10 @@ void drawSkinHeatMap( ) {
     int   id  =  i - SKIN_BUFFER_OFFSET;
     int   X   = ( id % SKIN_COLS ) * CELL_W;
     int   Y   = ( id / SKIN_COLS ) * CELL_H;
+    if (skinBuffer[ i ] < MIN_RANGE){skinBuffer[ i ] = 0;}
+    if (skinBuffer[ i ] > MAX_RANGE){skinBuffer[ i ] = 0;}
     float val = (float) sigmoid( skinBuffer[ i ] * PRESS_FACTOR - 8 );
+    //float val = (float) scaleBetween(skinBuffer[ i ], 0, 100, MIN_RANGE, MAX_RANGE);
     float in  = Math.min( Math.max( val, 0. ), 1. ) * WHITE;
     color c   = computeColor( in );
     

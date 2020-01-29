@@ -8,16 +8,26 @@
 
 MuCa muca;
 
+int calibrate_count = 0;
+
 void setup() {
   Serial.begin(2000000);
 
   muca.init(); // useInterrupt ne fonctionne pas bien
   muca.useRaw = true;
+  muca.calibrate(1.0);
   // muca.setGain(100);
 }
 
 void loop() {
-  GetRaw();
+  calibrate_count = 0;
+  //muca.calibrate(0.1);
+
+  while ( calibrate_count < 30){
+    GetRaw();
+    calibrate_count ++;
+  }
+
 }
 
 void GetRaw() {
