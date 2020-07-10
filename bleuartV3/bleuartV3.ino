@@ -5,6 +5,10 @@
   #define SERIAL_BUFFER_SIZE 64
 #endif
 
+
+
+#include <string.h>
+
 #include <bluefruit.h>
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
@@ -13,6 +17,10 @@
 #include "MuCa_firmware_raw.h"
 
 MuCa muca;
+
+#define CALIBRATION_STEPS 5
+short currentCalibrationStep = 0;
+unsigned int calibrationGrid[NUM_ROWS * NUM_COLUMNS];
 
 // BLE Service
 BLEDfu  bledfu;  // OTA DFU service
@@ -47,9 +55,10 @@ void setup()
 
   // Set up and start advertising
   startAdv();
+
+  // MUCA init 
   muca.init(false);
-  //muca.useRaw = true;
-  //muca.calibrate(1.0f);
+  muca.useRawData(true);
 }
 
 ////////////////////
@@ -112,6 +121,61 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 }
 
 ////////////////////
+//////////////////////////////////////// COMMUNICATION ////////////////////////////////////////
+////////////////////
+
+void ButcherStr(String str){
+  String separator = ",";
+  int counter = 0;
+  
+  int pos = 0;
+  String token = "";
+  while ((pos = str.indexOf(',')) != -1) {
+    token += str.substring(0, pos) + ",";
+    str.remove(0, pos + separator.length());
+    counter++;
+    
+    if (counter == 4  || (pos == -1 && token != "" )){
+      bleuart.print(token);
+      token = "";
+      counter = 0;
+    } 
+  }
+}
+
+////////////////////
+//////////////////////////////////////// MUCA ////////////////////////////////////////
+////////////////////
+
+void GetRaw() {
+   if (muca.updated()) {
+    if (currentCalibrationStep >= CALIBRATION_STEPS) {
+      String str = "";
+      for (int i = 0; i < NUM_ROWS; i++) {
+        for (int j = 0; j < NUM_COLUMNS; j++) {
+          if (muca.grid[i*NUM_ROWS + j] > 0) str += (muca.grid[i*NUM_ROWS + j] /*- calibrationGrid[i*NUM_ROWS + j]*/); // la calibration est a revoir
+          if (i*j != NUM_ROWS * NUM_COLUMNS - 1) str += ",";
+          else str += ";";
+        }
+        ButcherStr(str);
+        bleuart.print("\n");
+        str = "";
+      }
+    }
+    else { // Once the calibration is done
+    //Save the grid value to the calibration array
+     for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+      if (currentCalibrationStep == 0) calibrationGrid[i] = muca.grid[i]; // Copy array
+      else calibrationGrid[i] = (calibrationGrid[i] + muca.grid[i]) / 2 ; // Get average
+     }
+       currentCalibrationStep++;
+       bleuart.print("Calibration performed "); bleuart.print(currentCalibrationStep); bleuart.print("/"); bleuart.print(CALIBRATION_STEPS);
+    }
+  }
+}
+
+
+////////////////////
 //////////////////////////////////////// LOOP ////////////////////////////////////////
 ////////////////////
 
@@ -121,7 +185,13 @@ void loop(){
   while ( bleuart.available() ){
     char ch;
     ch =  bleuart.read();
-    bleuart.println(ch);
+    bleuart.println("Start !");
+    //bleuart.println(ch);
+    muca.getRawData();
+    GetRaw();
     bleuart.println(muca.messages_ble);
+    //bleuart.println(muca.grid[0]);
+    //bleuart.println(muca.grid[42]);
+
   }
 }
