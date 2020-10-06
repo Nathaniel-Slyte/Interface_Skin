@@ -49,7 +49,7 @@ void setup() {
   muca.useRawData(true); // If you use the raw data, the interrupt is not working
 
   delay(50);
-  muca.setGain(2);
+  //muca.setGain(2);
 }
 
 
@@ -129,12 +129,12 @@ void ButcherStr(String str){
 
 
 void loop() {
+  
   if (muca.updated()) {
     SendRawByte(); // Faster
   }
-  delay(16); // waiting 16ms for 60fps
-
-  delay(300);
+  
+  //delay(16); // waiting 16ms for 60fps
 
 }
 
@@ -162,7 +162,12 @@ void SendRawByte() {
   }
   // Serial.println();
   //GetFPS();
-   bleuart.write(rawByteValues, 254);
+  /*
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS +2; i++) {
+    bleuart.write(rawByteValues[i]);
+  }
+  */
+   writeBLEUart(rawByteValues, 254);
    //Serial.flush();
   //Serial.println();
 }
