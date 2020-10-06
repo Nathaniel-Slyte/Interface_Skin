@@ -112,13 +112,19 @@ void ButcherByte(uint8_t rawByteValues[]){
     token[counter] = rawByteValues[i];
     counter++;
     
-    if (counter == 20){
+    if (counter == 20 || i == NUM_ROWS * NUM_COLUMNS + 2){
+      if (i == NUM_ROWS * NUM_COLUMNS + 2){
+        token[14] = (0xFF<<8);
+        token[15] = (0x00<<8);
+        token[16] = (0xFF<<8);
+        token[17] = (0x00<<8);
+        token[18] = (0xFF<<8);
+        token[19] = (0x00<<8);
+      }
       bleuart.write(token, 20);
       counter = 0;
-    } 
-    
+    }  
   }
-  
 }
 
 
