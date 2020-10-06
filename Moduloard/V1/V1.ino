@@ -4,15 +4,16 @@
   #define SERIAL_BUFFER_SIZE 64
 #endif
 
-#include "MuCa_firmware_raw.h"
+#include <Muca.h>
 #include <string.h>
 #include <bluefruit.h>
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
 #include "Wire.h"
-int test = 0;
 
-MuCa muca;
+// gain 0 -> 31
+
+Muca muca;
 
 BLEDfu  bledfu;  // OTA DFU service
 BLEDis  bledis;  // device information
@@ -43,14 +44,12 @@ void setup() {
   blebas.write(100);
 
   startAdv();
-  
-  
-  //Serial.begin(2000000);
 
   muca.init();
-  muca.calibrate();
-  // muca.setGain(100);
-  
+  muca.useRawData(true); // If you use the raw data, the interrupt is not working
+
+  delay(50);
+  muca.setGain(2);
 }
 
 
@@ -130,85 +129,40 @@ void ButcherStr(String str){
 
 
 void loop() {
-  int total = 0;
-  bleuart.println("Here");
-  bleuart.println(muca.message_ble);
-  muca.getRawData();
-  String str = "";
-  for (int i = 0; i < ROWS_USE * NUM_COLUMNS; i++) {
-      if (abs(muca.grid[i]) > 0) {
-        str += muca.grid[i];
-        total += abs(muca.grid[i]);
-      }
-      if (i != ROWS_USE * NUM_COLUMNS - 1)
-        str += ",";
-    }
-   ButcherStr(str);
-   bleuart.println();
-   bleuart.println(total);
-   bleuart.println();
-  //GetRaw();
-  
-  /*
-  calibrate_count = 0;
-  //muca.calibrate(0.1);
-
-  while ( calibrate_count < 10){
-    GetRaw();
-    calibrate_count ++;
-  }
-  
-  while ( bleuart.available() ){
-    char ch;
-    ch =  bleuart.read();
-    delay(500);
-    if (ch == 'p')
-    {
-      bleuart.println("\n Data ! \n");
-      GetRaw();
-    }
-  }
-  */
-  delay(3000);
-
-}
-
-
-void GetRaw() {
   if (muca.updated()) {
-  
-   for (int i = 0; i < ROWS_USE * NUM_COLUMNS; i++) {
-      if (muca.grid[i] > 0) bleuart.print(muca.grid[i]);
-      if (i != ROWS_USE * NUM_COLUMNS - 1)
-        bleuart.print(",");
+    SendRawByte(); // Faster
+  }
+  delay(16); // waiting 16ms for 60fps
+
+  delay(300);
+
+}
+
+void SendRawByte() {
+  // The array is composed of 254 bytes. The two first for the minimum, the 252 others for the values.
+  // HIGH byte minimum | LOW byte minimum  | value 1
+
+  unsigned int minimum = 80000;
+  uint8_t rawByteValues[254];
+
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+  if (muca.grid[i] > 0 && minimum > muca.grid[i])  {
+      minimum = muca.grid[i]; // The +30 is to be sure it's positive
     }
-   bleuart.println();
+  }
+  rawByteValues[0] = highByte(minimum);
+  rawByteValues[1] = lowByte(minimum);
+
+
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+    rawByteValues[i + 2] = muca.grid[i] - minimum;
+    // Serial.print(rawByteValues[i+2]);
+    //  Serial.print(",");
 
   }
-
-  delay(1);
+  // Serial.println();
+  //GetFPS();
+   bleuart.write(rawByteValues, 254);
+   //Serial.flush();
+  //Serial.println();
 }
-
-
-
-/*
-
-int frameCount = 0;
-float fps = 0.0F;
-float t = 0.0F;
-float prevtt = 0.0F;
-
-void GetFPS()
-{
-  frameCount++;
-  t += millis() - prevtt;
-  if (t > 1000.0f)
-  {
-    fps = frameCount;
-    frameCount = 0;
-    t = 0;
-  }
-  prevtt = millis();
-  //Serial.println(fps);
-}
-*/
