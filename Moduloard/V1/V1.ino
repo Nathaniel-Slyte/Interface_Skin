@@ -22,13 +22,13 @@ BLEBas  blebas;  // battery
 
 //int calibrate_count = 0;
 
-String ID = "V1";
+String ID = "BPC";
 
 void setup() {
   
   Bluefruit.begin();
   Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
-  Bluefruit.setName("V1");
+  Bluefruit.setName("BPC");
   Bluefruit.Periph.setConnectCallback(connect_callback);
   Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
   
@@ -103,7 +103,24 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 
 
 
-
+void ButcherByte(uint8_t rawByteValues[]){
+  
+  String token = "";
+  int counter = 0;
+  
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS +2; i++) {
+    token += (String)rawByteValues[i];
+    counter++;
+    
+    if (counter == 4){
+      bleuart.print(token);
+      token = "";
+      counter = 0;
+    } 
+    
+  }
+  
+}
 
 
 
@@ -134,7 +151,8 @@ void loop() {
     SendRawByte(); // Faster
   }
   
-  //delay(16); // waiting 16ms for 60fps
+  delay(16); // waiting 16ms for 60fps
+  bleuart.println();
 
 }
 
@@ -167,7 +185,8 @@ void SendRawByte() {
     bleuart.write(rawByteValues[i]);
   }
   */
-   writeBLEUart(rawByteValues, 254);
+  ButcherByte(rawByteValues);
+   //bleuart.write(rawByteValues, 254);
    //Serial.flush();
   //Serial.println();
 }
