@@ -10,7 +10,7 @@
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
 #include "Wire.h"
-
+int test = 0;
 
 MuCa muca;
 
