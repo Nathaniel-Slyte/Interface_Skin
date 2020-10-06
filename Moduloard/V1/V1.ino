@@ -105,16 +105,15 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 
 void ButcherByte(uint8_t rawByteValues[]){
   
-  String token = "";
-  int counter = 0;
+  uint8_t token[20];
+  uint16_t counter = 0;
   
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS +2; i++) {
-    token += (String)rawByteValues[i];
+    token[counter] = rawByteValues[i];
     counter++;
     
-    if (counter == 4){
-      bleuart.print(token);
-      token = "";
+    if (counter == 20){
+      bleuart.write(token, 20);
       counter = 0;
     } 
     
@@ -151,6 +150,7 @@ void loop() {
     SendRawByte(); // Faster
   }
   
+  //bleuart.print("12345678901234567890123");
   delay(16); // waiting 16ms for 60fps
   bleuart.println();
 
